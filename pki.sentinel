@@ -1,0 +1,48 @@
+## this policy is to restrict the common name while issuing a pki cert 
+import "strings"
+
+# Only care about write and update operations against pki/issue
+precond = rule {
+  request.operation in ["write", "update"] and
+  strings.has_prefix(request.path, "pki/issue")
+}
+
+# check if the trusted orchestrator makes the request
+trusted_orchestrator_check = func() {
+
+  print ("trace:identity.entity.name", identity.entity.name)
+
+  # check identity
+  if identity.entity.name matches "terraform" {
+    return true
+  }
+  return false
+}
+
+# check common_name matches the entity metadata
+common_name_check = func() {
+  print ("trace:Request.data:", request.data)
+  print ("trace:TLSDomain", identity.entity.metadata.TLSDomain)
+
+  # Make sure there is request data
+  if length(request.data else 0) is 0 {
+    return false
+  }
+
+  # Make sure request data includes common_name
+  if length(request.data.common_name else 0) is 0 {
+    return false
+  }
+
+  # check common_name matches app name
+  if request.data.common_name matches identity.entity.metadata.TLSDomain {
+    return true
+  }
+
+  return false
+}
+
+# Check the precondition before executing all above functions
+main = rule when precond {
+  trusted_orchestrator_check() or common_name_check()
+}
