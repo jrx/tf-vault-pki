@@ -8,12 +8,15 @@ variable "vault-tenant-namespace" {
   default = "tenant-1"
 }
 
-# variable "secret-mount" {
-#   type    = string
-#   default = "secret"
-# }
+variable "aws-auth-region" {
+  type    = string
+  default = "eu-north-1"
+}
 
-# variable "secret-path" {
-#   type    = string
-#   default = "team-a/my-app/test"
-# }
+variable "aws-auth-account-id" {
+  type = string
+}
+
+variable "aws-auth-unique-id" {
+  type = string
+}

@@ -1,28 +1,9 @@
-# Structure
-
+# Create tenant namespace
 resource "vault_namespace" "tenant_namespace" {
   path = var.vault-tenant-namespace
 }
 
-# resource "vault_policy" "app-policy" {
-#   namespace = vault_namespace.tenant_namespace.path_fq
-#   name      = "my-app-policy"
-
-#   policy = <<EOT
-# # Allows to read K/V secrets 
-# path "${var.secret-mount}/data/{{identity.entity.aliases.${vault_auth_backend.kubernetes.accessor}.metadata.BusinessSegmentName}}/{{identity.entity.aliases.${vault_auth_backend.kubernetes.accessor}.metadata.AppName}}/*" {
-#     capabilities = ["read"]
-# }
-# # Allows reading K/V secret versions and metadata
-# path "${var.secret-mount}/metadata/{{identity.entity.aliases.${vault_auth_backend.kubernetes.accessor}.metadata.BusinessSegmentName}}/{{identity.entity.aliases.${vault_auth_backend.kubernetes.accessor}.metadata.AppName}}/*" {
-#       capabilities = ["list", "read"]
-# }
-# EOT
-# }
-
-
 # Vault Signing CA
-
 resource "vault_managed_keys" "vault_signing_ca" {
   aws {
     name               = "vault-signing-ca-key"
@@ -84,7 +65,6 @@ resource "vault_pki_secret_backend_config_urls" "vault_signing_ca" {
 }
 
 # Tenant Issuing CA
-
 resource "vault_managed_keys" "tenant_issuing_ca" {
   namespace = vault_namespace.tenant_namespace.path_fq
   aws {
@@ -158,7 +138,6 @@ resource "vault_pki_secret_backend_config_urls" "tenant_issuing_ca" {
 }
 
 # Unified CRL and Cross-Cluster Revocations
-
 resource "vault_pki_secret_backend_crl_config" "crl_config" {
   namespace                     = vault_namespace.tenant_namespace.path_fq
   backend                       = vault_mount.tenant_issuing_ca.path
@@ -170,7 +149,6 @@ resource "vault_pki_secret_backend_crl_config" "crl_config" {
 }
 
 # Tidying
-
 resource "vault_pki_secret_backend_config_auto_tidy" "pki_auto_tidy" {
   namespace          = vault_namespace.tenant_namespace.path_fq
   backend            = vault_mount.tenant_issuing_ca.path
@@ -182,7 +160,6 @@ resource "vault_pki_secret_backend_config_auto_tidy" "pki_auto_tidy" {
 }
 
 # Team role
-
 resource "vault_pki_secret_backend_role" "team-a" {
   namespace         = vault_namespace.tenant_namespace.path_fq
   backend           = vault_mount.tenant_issuing_ca.path
@@ -198,7 +175,6 @@ resource "vault_pki_secret_backend_role" "team-a" {
 }
 
 # Sentinel EGP
-
 resource "vault_egp_policy" "restrict-common-name" {
   namespace         = vault_namespace.tenant_namespace.path_fq
   name              = "restrict-common-name"
